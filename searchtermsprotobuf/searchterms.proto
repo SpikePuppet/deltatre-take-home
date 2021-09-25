@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "/searchtermsprotobuf";
+
+package searchtermsprotobuf;
+
+message SearchTermRequest {
+    string term = 1;
+}
+
+message SearchTermResponse {
+    string message = 1;
+}
+
+message UpdateSearchTermsRequest {
+    string term = 1;
+}
+
+message UpdateSearchTermsResponse {
+    // Following the practice of we don't know what we'll want later so 
+    // it's a good idea to at least define a request item now
+}
+
+message SearchTermMetricsRequest {
+    // Following the practice of we don't know what we'll want later so 
+    // it's a good idea to at least define a request item now
+}
+
+message SearchTermMetrics {
+    string term = 1;
+    int32 searchCount = 2;
+}
+
+message SearchTermMetricsResponse {
+    repeated SearchTermMetrics results = 1;
+}
+
+service Search {
+    rpc SearchTerms(SearchTermRequest) returns (SearchTermResponse) {}
+
+    rpc UpdateTerms(UpdateSearchTermsRequest) returns (UpdateSearchTermsResponse) {}
+
+    rpc GetSearchMetrics(SearchTermMetricsRequest) returns (SearchTermMetricsResponse) {}
+}
