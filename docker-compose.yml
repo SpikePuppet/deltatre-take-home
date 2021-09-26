@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+  searchrequestsbackend:
+    build: ./searchtermsbackend
+    container_name: backend
+    ports:
+      - "50080:50080"
+  searchrequestsfronend:
+    build: ./searchtermsfrontend
+    container_name: frontend
+    ports:
+      - "8080:8080"
