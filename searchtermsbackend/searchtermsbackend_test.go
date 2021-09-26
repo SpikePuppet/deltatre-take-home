@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"reflect"
-	st "searchtermsprotobuf"
 	"testing"
 
 	"google.golang.org/grpc"
@@ -21,7 +20,7 @@ var listener *bufconn.Listener
 func init() {
 	listener = bufconn.Listen(bufsize)
 	server := grpc.NewServer()
-	st.RegisterSearchServer(server, &SearchServer{})
+	RegisterSearchServer(server, &SearchTermsServer{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
@@ -36,22 +35,22 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 
 func TestSearchTerms(t *testing.T) {
 	tables := []struct {
-		searchTermRequest st.SearchTermRequest
+		searchTermRequest SearchTermRequest
 		result            string
 	}{
-		{st.SearchTermRequest{Term: "hello"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "goodbye"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "simple"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "list"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "search"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "filter"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "yes"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "no"}, "Term exists!"},
-		{st.SearchTermRequest{Term: "seed"}, "Term does not exist!"},
-		{st.SearchTermRequest{Term: "database"}, "Term does not exist!"},
-		{st.SearchTermRequest{Term: "golang"}, "Term does not exist!"},
-		{st.SearchTermRequest{Term: "deltatre"}, "Term does not exist!"},
-		{st.SearchTermRequest{Term: "streaming"}, "Term does not exist!"},
+		{SearchTermRequest{Term: "hello"}, "Term exists!"},
+		{SearchTermRequest{Term: "goodbye"}, "Term exists!"},
+		{SearchTermRequest{Term: "simple"}, "Term exists!"},
+		{SearchTermRequest{Term: "list"}, "Term exists!"},
+		{SearchTermRequest{Term: "search"}, "Term exists!"},
+		{SearchTermRequest{Term: "filter"}, "Term exists!"},
+		{SearchTermRequest{Term: "yes"}, "Term exists!"},
+		{SearchTermRequest{Term: "no"}, "Term exists!"},
+		{SearchTermRequest{Term: "seed"}, "Term does not exist!"},
+		{SearchTermRequest{Term: "database"}, "Term does not exist!"},
+		{SearchTermRequest{Term: "golang"}, "Term does not exist!"},
+		{SearchTermRequest{Term: "deltatre"}, "Term does not exist!"},
+		{SearchTermRequest{Term: "streaming"}, "Term does not exist!"},
 	}
 
 	ctx := context.Background()
@@ -60,7 +59,7 @@ func TestSearchTerms(t *testing.T) {
 		log.Fatalf("failed to dial bufnet: %v", err)
 	}
 	defer connection.Close()
-	client := st.NewSearchClient(connection)
+	client := NewSearchClient(connection)
 
 	for _, table := range tables {
 		result, _ := client.SearchTerms(ctx, &table.searchTermRequest)
@@ -88,15 +87,15 @@ func TestUpdateTerms(t *testing.T) {
 		log.Fatalf("failed to dial bufnet: %v", err)
 	}
 	defer connection.Close()
-	client := st.NewSearchClient(connection)
+	client := NewSearchClient(connection)
 
 	for _, table := range tables {
-		_, err = client.UpdateTerms(ctx, &st.UpdateSearchTermsRequest{Term: table.updateSearchTermRequest})
+		_, err = client.UpdateTerms(ctx, &UpdateSearchTermsRequest{Term: table.updateSearchTermRequest})
 		if err != nil {
 			t.Errorf("Test failed, an error occured during update, err %v", err)
 		}
 
-		result, _ := client.SearchTerms(ctx, &st.SearchTermRequest{Term: table.updateSearchTermRequest})
+		result, _ := client.SearchTerms(ctx, &SearchTermRequest{Term: table.updateSearchTermRequest})
 		if result.Message != table.result {
 			t.Errorf("Test failed, search result was incorrect for %s, got %s, expected %s", table.updateSearchTermRequest, result.Message, table.result)
 		}
@@ -106,15 +105,15 @@ func TestUpdateTerms(t *testing.T) {
 func TestGetSearchMetrics(t *testing.T) {
 	tables := []struct {
 		searchTerms     []string
-		expectedMetrics []*st.SearchTermMetrics
+		expectedMetrics []*SearchTermMetrics
 	}{
-		{[]string{"hello", "hello", "hello", "simple", "simple", "yes"}, []*st.SearchTermMetrics{
+		{[]string{"hello", "hello", "hello", "simple", "simple", "yes"}, []*SearchTermMetrics{
 			{Term: "hello", SearchCount: 3},
 			{Term: "simple", SearchCount: 2},
 			{Term: "yes", SearchCount: 1},
 		}},
 		{[]string{"hello", "goodbye", "goodbye", "goodbye", "goodbye", "goodbye", "simple", "simple", "simple", "simple", "yes", "yes", "yes", "no", "no"},
-			[]*st.SearchTermMetrics{
+			[]*SearchTermMetrics{
 				{Term: "goodbye", SearchCount: 5},
 				{Term: "simple", SearchCount: 4},
 				{Term: "yes", SearchCount: 3},
@@ -130,7 +129,7 @@ func TestGetSearchMetrics(t *testing.T) {
 		log.Fatalf("failed to dial bufnet: %v", err)
 	}
 	defer connection.Close()
-	client := st.NewSearchClient(connection)
+	client := NewSearchClient(connection)
 
 	for _, table := range tables {
 		terms = map[string]int{
@@ -145,13 +144,13 @@ func TestGetSearchMetrics(t *testing.T) {
 		}
 
 		for _, value := range table.searchTerms {
-			_, err = client.SearchTerms(ctx, &st.SearchTermRequest{Term: value})
+			_, err = client.SearchTerms(ctx, &SearchTermRequest{Term: value})
 			if err != nil {
 				t.Errorf("error during test setup, err: %v", err)
 			}
 		}
 
-		result, _ := client.GetSearchMetrics(ctx, &st.SearchTermMetricsRequest{})
+		result, _ := client.GetSearchMetrics(ctx, &SearchTermMetricsRequest{})
 		for i := 0; i < len(table.expectedMetrics)-1; i++ {
 			if !reflect.DeepEqual(table.expectedMetrics[i], result.Results[i]) {
 				t.Errorf("Test failed, metrics order was incorrect, got %v, expected %v", result.Results[i], table.expectedMetrics[i])

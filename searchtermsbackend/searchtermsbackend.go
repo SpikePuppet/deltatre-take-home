@@ -4,18 +4,17 @@ import (
 	"context"
 	"log"
 	"net"
-	st "searchtermsprotobuf"
 	"sort"
 
 	"google.golang.org/grpc"
 )
 
 const (
-	port = ":50080"
+	address = "backend:50080"
 )
 
-type SearchServer struct {
-	st.UnimplementedSearchServer
+type SearchTermsServer struct {
+	UnimplementedSearchServer
 }
 
 var terms = map[string]int{
@@ -30,42 +29,42 @@ var terms = map[string]int{
 }
 
 func main() {
-	listener, err := net.Listen("tcp", port)
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	server := grpc.NewServer()
-	st.RegisterSearchServer(server, &SearchServer{})
+	RegisterSearchServer(server, &SearchTermsServer{})
 	log.Printf("server listening at %v", listener.Addr())
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
 
-func (s *SearchServer) SearchTerms(ctx context.Context, in *st.SearchTermRequest) (*st.SearchTermResponse, error) {
+func (s *SearchTermsServer) SearchTerms(ctx context.Context, in *SearchTermRequest) (*SearchTermResponse, error) {
 	_, exists := terms[in.Term]
 	if !exists {
-		return &st.SearchTermResponse{Message: "Term does not exist!"}, nil
+		return &SearchTermResponse{Message: "Term does not exist!"}, nil
 	}
 
 	terms[in.Term]++
-	return &st.SearchTermResponse{Message: "Term exists!"}, nil
+	return &SearchTermResponse{Message: "Term exists!"}, nil
 }
 
-func (s *SearchServer) UpdateTerms(ctx context.Context, in *st.UpdateSearchTermsRequest) (*st.UpdateSearchTermsResponse, error) {
+func (s *SearchTermsServer) UpdateTerms(ctx context.Context, in *UpdateSearchTermsRequest) (*UpdateSearchTermsResponse, error) {
 	terms[in.Term] = 0
-	return &st.UpdateSearchTermsResponse{}, nil
+	return &UpdateSearchTermsResponse{}, nil
 }
 
-func (s *SearchServer) GetSearchMetrics(ctx context.Context, in *st.SearchTermMetricsRequest) (*st.SearchTermMetricsResponse, error) {
-	var results []*st.SearchTermMetrics
+func (s *SearchTermsServer) GetSearchMetrics(ctx context.Context, in *SearchTermMetricsRequest) (*SearchTermMetricsResponse, error) {
+	var results []*SearchTermMetrics
 	for key, value := range terms {
-		results = append(results, &st.SearchTermMetrics{Term: key, SearchCount: int32(value)})
+		results = append(results, &SearchTermMetrics{Term: key, SearchCount: int32(value)})
 	}
 
 	sort.SliceStable(results, func(i, j int) bool {
 		return results[i].SearchCount > results[j].SearchCount
 	})
 
-	return &st.SearchTermMetricsResponse{Results: results[:5]}, nil
+	return &SearchTermMetricsResponse{Results: results[:5]}, nil
 }
