@@ -45,7 +45,7 @@ func main() {
 func (s *SearchServer) SearchTerms(ctx context.Context, in *st.SearchTermRequest) (*st.SearchTermResponse, error) {
 	_, exists := terms[in.Term]
 	if !exists {
-		return &st.SearchTermResponse{Message: "Term does not exist"}, nil
+		return &st.SearchTermResponse{Message: "Term does not exist!"}, nil
 	}
 
 	terms[in.Term]++
