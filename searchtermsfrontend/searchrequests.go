@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	st "searchtermsprotobuf"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +12,7 @@ import (
 )
 
 const (
-	searchtermsbackendaddress = "localhost:50080"
+	searchtermsbackendaddress = "backend:50080"
 )
 
 func searchTerms(c *gin.Context) {
@@ -26,17 +25,11 @@ func searchTerms(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	client := st.NewSearchClient(conn)
+	client := NewSearchClient(conn)
 
 	term := c.Param("term")
-	if len(term) <= 0 {
-		log.Printf("cannot search with empty search term, %v", err)
-		c.JSON(400, gin.H{
-			"error": "cannot search with empty search term",
-		})
-	}
 
-	request := st.SearchTermRequest{
+	request := SearchTermRequest{
 		Term: term,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -52,7 +45,6 @@ func searchTerms(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"results": response.Message,
 	})
-	return
 
 }
 
@@ -66,19 +58,13 @@ func updateSearchTerms(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	client := st.NewSearchClient(conn)
+	client := NewSearchClient(conn)
 
 	term := c.Param("term")
-	if len(term) <= 0 {
-		log.Printf("cannot use empty search term, %v", err)
-		c.JSON(400, gin.H{
-			"error": "cannot update with empty search term",
-		})
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	_, err = client.UpdateTerms(ctx, &st.UpdateSearchTermsRequest{Term: term})
+	_, err = client.UpdateTerms(ctx, &UpdateSearchTermsRequest{Term: term})
 	if err != nil {
 		log.Printf("error searching for %s, err: %v", term, err)
 		c.JSON(400, gin.H{
@@ -100,11 +86,11 @@ func getTopFiveSearchResults(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	client := st.NewSearchClient(conn)
+	client := NewSearchClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	searchMetrics, err := client.GetSearchMetrics(ctx, &st.SearchTermMetricsRequest{})
+	searchMetrics, err := client.GetSearchMetrics(ctx, &SearchTermMetricsRequest{})
 	if err != nil {
 		log.Printf("error getting metrics, err: %v", err)
 		c.JSON(400, gin.H{
