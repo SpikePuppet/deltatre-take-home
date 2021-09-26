@@ -12,3 +12,6 @@ Once this is running, you can query the service at localhost:8080 and use the fo
 1. GET - /search-term/<search-term> - This will search the database <search-term>, and return a message saying either "Term exists!" or "Term does not exist!"
 2. PUT - /update-search-terms/<search-term> - This will add a term to the database and will start tracking metrics on how many times it's been searched
 3. GET /search-term-metrics - This will get the top five most searched terms. Note, if they haven't been searched the field SearchCount will be omitted, meaning it was 0. The results are returned as an array of objects, with a Term property which defined which term it's reporting on, and SearchCount which reports how many times a term has been searched.
+
+## Potential Refactoring Opportunities
+If you wish to see what i would start to improve with more time, feel free to reference the PotentialRefactoringOpportunities.md file.
