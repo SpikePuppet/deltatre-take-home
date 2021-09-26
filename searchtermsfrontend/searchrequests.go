@@ -115,5 +115,4 @@ func getTopFiveSearchResults(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"results": searchMetrics.Results,
 	})
-	return
 }
