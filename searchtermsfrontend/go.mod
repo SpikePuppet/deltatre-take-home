@@ -23,7 +23,6 @@ require (
 	google.golang.org/grpc v1.41.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	searchtermsprotobuf v1.0.0
 )
 
-replace searchtermsprotobuf => ../searchtermsprotobuf
+
